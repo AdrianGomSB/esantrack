@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+.fc .fc-button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  margin: 0 0.25rem;
+}
+
+.fc .fc-button:hover {
+  background-color: #2563eb;
+}
+
+.fc .fc-button-active {
+  background-color: #1d4ed8;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
