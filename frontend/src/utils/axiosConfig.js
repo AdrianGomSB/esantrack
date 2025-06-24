@@ -1,18 +1,17 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api",
+  withCredentials: true,
 });
 
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.error("❌ Error 401: Token inválido o expirado.");
-      console.log("Token:", localStorage.getItem("token"));
-      console.log("Usuario:", localStorage.getItem("usuario"));
+      localStorage.clear();
+      window.location.href = "/";
     }
-
     return Promise.reject(error);
   }
 );
