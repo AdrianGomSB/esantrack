@@ -1,14 +1,29 @@
 # Node
 node_modules/
-.env
-dist/
-build/
-
-# Logs
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+.env
 
-# Vercel
-.vercel/
-.output/
+# Backend
+backend/node_modules/
+backend/.env
+backend/dist/
+backend/logs/
+backend/*.log
+
+# Frontend
+frontend/node_modules/
+frontend/.env
+frontend/dist/
+frontend/build/
+frontend/.vite/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editor y entorno
+.vscode/
+.idea/
+
+# Git
+.git
