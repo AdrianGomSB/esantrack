@@ -17,11 +17,8 @@ function Login() {
     setError("");
 
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        form
-      );
-      const { token, usuario } = res.data; // 🔹 asegúrate de usar "usuario" como en el backend
+      const res = await axios.post("/auth/login", form);
+      const { token, usuario } = res.data;
 
       const decoded = JSON.parse(atob(token.split(".")[1]));
 
