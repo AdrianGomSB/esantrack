@@ -14,7 +14,12 @@ const usersRoutes = require("./routes/userRoutes");
 const auditoriaRoutes = require("./routes/auditoriaRoutes");
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://esantrack-git-main-adrians-projects-b4e8c77f.vercel.app",
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
