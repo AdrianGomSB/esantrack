@@ -42,7 +42,7 @@ Sistema integral de gestión de rutas, puntos georreferenciados y visitas, dise�
 ### 1. Clonar repositorio
 
 ```bash
-git clone https://github.com/tuusuario/backoffice-app.git
+git clone https://github.com/(ponees tu usuario aquí jeje)/backoffice-app.git
 cd backoffice-app
 ```
 
@@ -58,12 +58,12 @@ Crea un archivo `.env` con tus credenciales:
 
 ```
 PORT=5000
-DB_USER=tu_usuario
+DB_USER=(Tu user de bd)
 DB_HOST=localhost
-DB_DATABASE=nombre_bd
-DB_PASSWORD=tu_contraseña
+DB_DATABASE=(El nombre de tu bd)
+DB_PASSWORD=(contraseña de tu bd)
 DB_PORT=5432
-JWT_SECRET=secreto_seguro
+JWT_SECRET=(Solo si usas JWT) - borralo sino
 ```
 
 ### 3. Frontend
@@ -73,24 +73,5 @@ cd frontend
 npm install
 npm run dev
 ```
-
----
-
-## 📂 Estructura del proyecto
-
-```
-backoffice-app/
-├── backend/
-│   ├── controllers/
-│   ├── routes/
-│   ├── models/
-│   └── ...
-├── frontend/
-│   ├── src/components/
-│   ├── src/pages/
-│   └── ...
-└── README.md
-```
-## 👨‍💻 Autor
 
 - Desarrollado por Adrian Gómez Sánchez – [@AdrianGomSB](https://github.com/AdrianGomSB)
