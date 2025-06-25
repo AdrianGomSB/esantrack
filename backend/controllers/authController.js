@@ -39,6 +39,7 @@ const registerUser = async (req, res) => {
 // LOGIN
 const loginUser = async (req, res) => {
   const { username, password } = req.body;
+  console.log("Intentando iniciar sesión con:", username);
 
   try {
     const result = await pool.query("SELECT * FROM users WHERE username = $1", [
@@ -74,6 +75,7 @@ const loginUser = async (req, res) => {
       },
     });
   } catch (err) {
+    console.error("Error interno en login:", err);
     console.error(err);
     res.status(500).json({ error: "Error interno" });
   }
