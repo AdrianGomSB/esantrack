@@ -14,9 +14,8 @@ const registerUser = async (req, res) => {
       [username, hashedPassword, role || "user", nombre, equipo]
     );
 
-    // Auditoría: registrar la creación del usuario
     await registrarAuditoria({
-      usuario_id: req.user?.id || null, // si tienes autenticación activa
+      usuario_id: req.user?.id || null,
       tabla: "users",
       registro_id: result.rows[0].id,
       campo: "registro",

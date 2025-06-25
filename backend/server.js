@@ -14,12 +14,24 @@ const usersRoutes = require("./routes/userRoutes");
 const auditoriaRoutes = require("./routes/auditoriaRoutes");
 
 const app = express();
+const allowedOrigins = [
+  "https://esantrack.vercel.app",
+  "https://esantrack-git-main-adrians-projects-b4e8c77f.vercel.app",
+];
+
 app.use(
   cors({
-    origin: "https://esantrack-git-main-adrians-projects-b4e8c77f.vercel.app",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
+
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
