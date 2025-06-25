@@ -25,7 +25,7 @@ const Usuarios = () => {
   const obtenerUsuarios = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/users", {
+      const res = await axios.get("/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -84,13 +84,9 @@ const Usuarios = () => {
         payload.password = usuarioEditar.password;
       }
 
-      await axios.patch(
-        `http://localhost:5000/api/users/${usuarioEditar.id}`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.patch(`/users/${usuarioEditar.id}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       cerrarModal();
       obtenerUsuarios();
@@ -104,7 +100,7 @@ const Usuarios = () => {
     if (!window.confirm("¿Estás seguro de eliminar este usuario?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/users/${id}`, {
+      await axios.delete(`/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       obtenerUsuarios();
@@ -123,7 +119,7 @@ const Usuarios = () => {
         payload.equipo = usuarioEditar.equipo;
       }
 
-      await axios.post("http://localhost:5000/api/auth/register", payload);
+      await axios.post("/auth/register", payload);
       cerrarModalCrear();
       obtenerUsuarios();
     } catch (err) {

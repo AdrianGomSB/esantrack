@@ -36,13 +36,9 @@ const Perfil = () => {
         payload.password = perfil.password;
       }
 
-      await axios.patch(
-        `http://localhost:5000/api/users/${usuarioActual.id}`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.patch(`/users/${usuarioActual.id}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       setMensaje("Perfil actualizado correctamente.");
     } catch (err) {

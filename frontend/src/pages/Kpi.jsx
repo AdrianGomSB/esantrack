@@ -81,7 +81,7 @@ const Kpi = () => {
   const obtenerUsuarios = async () => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get("http://localhost:5000/api/users", {
+      const { data } = await axios.get("/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsuarios(data);
@@ -93,12 +93,9 @@ const Kpi = () => {
   const obtenerPuntos = async () => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get(
-        "http://localhost:5000/api/puntos_ruta",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const { data } = await axios.get("/puntos_ruta", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setPuntos(data);
     } catch (error) {
       console.error("Error al cargar puntos:", error);

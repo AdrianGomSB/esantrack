@@ -46,7 +46,7 @@ const Rutas = () => {
   const obtenerRutas = async () => {
     setCargando(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/rutas", {
+      const res = await axios.get("/rutas", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -76,7 +76,7 @@ const Rutas = () => {
       const obtenerUsuarios = async () => {
         try {
           const token = localStorage.getItem("token");
-          const res = await axios.get("http://localhost:5000/api/users", {
+          const res = await axios.get("/users", {
             headers: { Authorization: `Bearer ${token}` },
           });
           setUsuarios(res.data);
@@ -425,18 +425,15 @@ const Rutas = () => {
                 onClick={async () => {
                   try {
                     for (let i = 0; i < puntosRuta.length; i++) {
-                      await axios.post(
-                        "http://localhost:5000/api/puntos_ruta",
-                        {
-                          ruta_id: rutaSeleccionadaParaPuntos.id,
-                          latitud: puntosRuta[i].latitud,
-                          longitud: puntosRuta[i].longitud,
-                          orden: i + 1,
-                          estado: puntosRuta[i].estado,
-                          tipo: puntosRuta[i].tipo || "",
-                          nombre: puntosRuta[i].nombre || "",
-                        }
-                      );
+                      await axios.post("/puntos_ruta", {
+                        ruta_id: rutaSeleccionadaParaPuntos.id,
+                        latitud: puntosRuta[i].latitud,
+                        longitud: puntosRuta[i].longitud,
+                        orden: i + 1,
+                        estado: puntosRuta[i].estado,
+                        tipo: puntosRuta[i].tipo || "",
+                        nombre: puntosRuta[i].nombre || "",
+                      });
                     }
                     await obtenerRutas();
                     setMostrarModalCrearPuntos(false);
@@ -523,7 +520,7 @@ const Rutas = () => {
 
                     try {
                       await axios.put(
-                        `http://localhost:5000/api/puntos_ruta/${puntoSeleccionado.id}`,
+                        `/puntos_ruta/${puntoSeleccionado.id}`,
                         {
                           orden: puntoSeleccionado.orden,
                           estado: puntoSeleccionado.estado,

@@ -21,7 +21,7 @@ const Organizacion = () => {
   const obtenerOrganizaciones = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/organizaciones", {
+      const res = await axios.get("/organizaciones", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setOrganizaciones(res.data);
@@ -36,20 +36,16 @@ const Organizacion = () => {
 
       if (nuevaOrganizacion.id) {
         await axios.put(
-          `http://localhost:5000/api/organizaciones/${nuevaOrganizacion.id}`,
+          `/organizaciones/${nuevaOrganizacion.id}`,
           nuevaOrganizacion,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
       } else {
-        await axios.post(
-          "http://localhost:5000/api/organizaciones",
-          nuevaOrganizacion,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        await axios.post("/api/organizaciones", nuevaOrganizacion, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       }
 
       setNuevaOrganizacion({ nombre: "", tipo: "Empresa", direccion: "" });
@@ -64,7 +60,7 @@ const Organizacion = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/organizaciones/${id}`, {
+      await axios.delete(`/organizaciones/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       obtenerOrganizaciones();
@@ -88,7 +84,7 @@ const Organizacion = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `http://localhost:5000/api/empresas/buscar?query=${encodeURIComponent(
+        `/empresas/buscar?query=${encodeURIComponent(
           texto
         )}&tipo=${encodeURIComponent(nuevaOrganizacion.tipo)}`,
         {

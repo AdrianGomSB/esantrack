@@ -23,7 +23,7 @@ const Calendario = () => {
   const [filtroUsuario, setFiltroUsuario] = useState("");
   const geocodificarDireccion = async (direccion) => {
     try {
-      const res = await axios.get("http://localhost:5000/api/geocodificar", {
+      const res = await axios.get("/geocodificar", {
         params: { direccion },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`, // solo si es necesario
@@ -73,7 +73,7 @@ const Calendario = () => {
   useEffect(() => {
     const fetchPuntosRuta = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/puntos_ruta", {
+        const res = await axios.get("/puntos_ruta", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -93,7 +93,7 @@ const Calendario = () => {
       const obtenerUsuarios = async () => {
         try {
           const token = localStorage.getItem("token");
-          const res = await axios.get("http://localhost:5000/api/users", {
+          const res = await axios.get("/users", {
             headers: { Authorization: `Bearer ${token}` },
           });
           setUsuarios(res.data);
@@ -290,7 +290,7 @@ const Calendario = () => {
                       if (modoEdicion) {
                         // Editar evento
                         await axios.put(
-                          `http://localhost:5000/api/eventos/${eventoEnEdicionId}`,
+                          `/eventos/${eventoEnEdicionId}`,
                           {
                             titulo: nuevoEvento.title,
                             fecha_inicio: nuevoEvento.date,
@@ -308,7 +308,7 @@ const Calendario = () => {
                       } else {
                         // Crear evento
                         const response = await axios.post(
-                          "http://localhost:5000/api/eventos",
+                          "/eventos",
                           {
                             titulo: nuevoEvento.title,
                             fecha_inicio: nuevoEvento.date,
@@ -337,16 +337,13 @@ const Calendario = () => {
                       }
 
                       // Actualizar lista de eventos
-                      const res = await axios.get(
-                        "http://localhost:5000/api/eventos",
-                        {
-                          headers: {
-                            Authorization: `Bearer ${localStorage.getItem(
-                              "token"
-                            )}`,
-                          },
-                        }
-                      );
+                      const res = await axios.get("/eventos", {
+                        headers: {
+                          Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                          )}`,
+                        },
+                      });
 
                       const eventosActualizados = res.data.map((evento) => ({
                         id: evento.id,
@@ -462,7 +459,7 @@ const Calendario = () => {
                       if (query.trim()) {
                         try {
                           const res = await axios.get(
-                            `http://localhost:5000/api/organizaciones/buscar?query=${encodeURIComponent(
+                            `/organizaciones/buscar?query=${encodeURIComponent(
                               query
                             )}&tipo=${encodeURIComponent(
                               categoriaSeleccionada
@@ -707,7 +704,7 @@ const Calendario = () => {
                   try {
                     for (let i = 0; i < puntosRuta.length; i++) {
                       await axios.post(
-                        "http://localhost:5000/api/puntos_ruta",
+                        "/puntos_ruta",
                         {
                           ruta_id: rutaSeleccionadaParaPuntos.id,
                           latitud: puntosRuta[i].latitud,
@@ -803,7 +800,7 @@ const Calendario = () => {
                 onClick={async () => {
                   try {
                     await axios.put(
-                      `http://localhost:5000/api/puntos_ruta/${eventoSeleccionado.id}`,
+                      `/puntos_ruta/${eventoSeleccionado.id}`,
                       {
                         estado: eventoSeleccionado.estado,
                       },
@@ -817,16 +814,13 @@ const Calendario = () => {
                     );
 
                     // Recargar eventos para ver reflejado el cambio
-                    const res = await axios.get(
-                      "http://localhost:5000/api/puntos_ruta",
-                      {
-                        headers: {
-                          Authorization: `Bearer ${localStorage.getItem(
-                            "token"
-                          )}`,
-                        },
-                      }
-                    );
+                    const res = await axios.get("/puntos_ruta", {
+                      headers: {
+                        Authorization: `Bearer ${localStorage.getItem(
+                          "token"
+                        )}`,
+                      },
+                    });
 
                     const eventos = res.data.map((p) => {
                       const fecha = new Date(p.fecha)

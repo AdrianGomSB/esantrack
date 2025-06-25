@@ -106,12 +106,9 @@ const Inicio = () => {
     const obtenerPuntosHoy = async () => {
       try {
         const token = localStorage.getItem("token");
-        const { data } = await axios.get(
-          "http://localhost:5000/api/puntos_ruta",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const { data } = await axios.get("/puntos_ruta", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
         const hoy = new Date().toISOString().slice(0, 10);
         const puntos = Array.isArray(data) ? data : [];

@@ -15,7 +15,7 @@ const Auditoria = () => {
   const obtenerAuditoria = async () => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get("http://localhost:5000/api/auditoria", {
+      const { data } = await axios.get("/auditoria", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRegistros(Array.isArray(data) ? data : []);
@@ -28,7 +28,7 @@ const Auditoria = () => {
   const obtenerUsuarios = async () => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get("http://localhost:5000/api/users", {
+      const { data } = await axios.get("/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsuarios(data);
