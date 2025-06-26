@@ -489,17 +489,24 @@ const Calendario = () => {
                           className="px-3 py-1 hover:bg-blue-100 cursor-pointer"
                           onClick={async () => {
                             setEmpresaInput(emp.nombre);
-                            const coords = await geocodificarDireccion(
-                              emp.direccion
-                            );
-                            if (coords) {
-                              setNuevoPunto((prev) => ({
-                                ...prev,
-                                direccion: emp.direccion,
-                                latitud: coords.lat,
-                                longitud: coords.lng,
-                              }));
+                            setNuevoPunto((prev) => ({
+                              ...prev,
+                              direccion: emp.direccion || "", // esto rellena automáticamente el campo
+                            }));
+
+                            if (emp.direccion) {
+                              const coords = await geocodificarDireccion(
+                                emp.direccion
+                              );
+                              if (coords) {
+                                setNuevoPunto((prev) => ({
+                                  ...prev,
+                                  latitud: coords.lat,
+                                  longitud: coords.lng,
+                                }));
+                              }
                             }
+
                             setEmpresaSugerencias([]);
                           }}
                         >
