@@ -1,6 +1,5 @@
 const pool = require("../models/db");
 
-// Obtener todas las empresas
 const getEmpresas = async (req, res) => {
   try {
     const result = await pool.query(
@@ -15,11 +14,11 @@ const getEmpresas = async (req, res) => {
 
 // Crear una nueva empresa
 const crearEmpresa = async (req, res) => {
-  const { nombre, tipo, direccion } = req.body;
+  const { nombre, tipo } = req.body;
   try {
     const result = await pool.query(
-      "INSERT INTO empresas (nombre, tipo, direccion) VALUES ($1, $2, $3) RETURNING *",
-      [nombre, tipo || "Empresa", direccion]
+      "INSERT INTO empresas (nombre, tipo) VALUES ($1, $2) RETURNING *",
+      [nombre, tipo || "Empresa"]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -28,7 +27,6 @@ const crearEmpresa = async (req, res) => {
   }
 };
 
-// Actualizar una empresa
 const actualizarEmpresa = async (req, res) => {
   const { id } = req.params;
   const { nombre, tipo } = req.body;
@@ -68,7 +66,7 @@ const buscarEmpresasPorNombre = async (req, res) => {
     let result;
     if (tipo) {
       result = await pool.query(
-        `SELECT id_empresa, nombre, direccion
+        `SELECT id_empresa, nombre
          FROM empresas
          WHERE nombre ILIKE $1 AND tipo = $2
          ORDER BY nombre
@@ -77,7 +75,7 @@ const buscarEmpresasPorNombre = async (req, res) => {
       );
     } else {
       result = await pool.query(
-        `SELECT id_empresa, nombre, direccion
+        `SELECT id_empresa, nombre
          FROM empresas
          WHERE nombre ILIKE $1
          ORDER BY nombre
