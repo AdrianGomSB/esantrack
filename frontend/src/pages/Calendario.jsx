@@ -21,14 +21,18 @@ const Calendario = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [filtroEquipo, setFiltroEquipo] = useState("");
   const [filtroUsuario, setFiltroUsuario] = useState("");
+
   const geocodificarDireccion = async (direccion) => {
     try {
-      const res = await axios.get("/geocodificar", {
-        params: { direccion },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // solo si es necesario
-        },
-      });
+      const res = await axios.get(
+        `/geocodificar?direccion=${encodeURIComponent(direccion)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
       return res.data;
     } catch (err) {
       console.error("Error al geocodificar dirección:", err);
