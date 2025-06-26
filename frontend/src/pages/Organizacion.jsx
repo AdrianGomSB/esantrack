@@ -42,7 +42,7 @@ const Organizacion = () => {
           }
         );
       } else {
-        await axios.post("/api/organizaciones", nuevaOrganizacion, {
+        await axios.post("/organizaciones", nuevaOrganizacion, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
