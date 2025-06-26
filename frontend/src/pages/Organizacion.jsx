@@ -11,7 +11,6 @@ const Organizacion = () => {
   const [nuevaOrganizacion, setNuevaOrganizacion] = useState({
     nombre: "",
     tipo: "Empresa",
-    direccion: "",
   });
 
   useEffect(() => {
@@ -48,7 +47,7 @@ const Organizacion = () => {
         });
       }
 
-      setNuevaOrganizacion({ nombre: "", tipo: "Empresa", direccion: "" });
+      setNuevaOrganizacion({ nombre: "", tipo: "Empresa" });
       setMostrarModal(false);
       obtenerOrganizaciones();
     } catch (error) {
@@ -159,7 +158,6 @@ const Organizacion = () => {
                         setNuevaOrganizacion({
                           ...nuevaOrganizacion,
                           nombre: sug.nombre,
-                          direccion: sug.direccion || "", // para completar dirección si existe
                         });
                         setSugerenciasNombre([]);
                       }}
