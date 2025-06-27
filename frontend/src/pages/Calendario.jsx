@@ -495,9 +495,15 @@ const Calendario = () => {
                             setEmpresaInput(emp.nombre);
                             setNuevoPunto((prev) => ({
                               ...prev,
+                              direccion: emp.direccion || "", // esto rellena automáticamente el campo
+                            }));
+
+                            setNuevoPunto((prev) => ({
+                              ...prev,
                               latitud: null,
                               longitud: null,
                             }));
+
                             setEmpresaSugerencias([]);
                           }}
                         >
