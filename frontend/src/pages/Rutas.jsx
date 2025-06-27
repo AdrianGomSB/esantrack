@@ -599,7 +599,7 @@ const Rutas = () => {
 
             <div className="flex justify-end mt-6 gap-2">
               <button
-                className="btn btn-primary"
+                className="btn btn-sm bg-gray-300 hover:bg-gray-400 text-black font-semibold border border-gray-500 px-4 py-2 rounded shadow"
                 onClick={() => {
                   setMostrarModalEditarPuntos(false);
                   setRutaSeleccionadaParaPuntos(null);
@@ -617,7 +617,7 @@ const Rutas = () => {
                   });
                 }}
               >
-                Cerrar
+                ❌ Cerrar
               </button>
             </div>
           </div>
@@ -629,13 +629,17 @@ const Rutas = () => {
             <GoogleMapComponent
               puntos={puntosRuta}
               ruta={rutaSeleccionadaParaPuntos}
+              onMarkerClick={(p) => {
+                setPuntoSeleccionado(p);
+                setMostrarModalEditarPuntos(true);
+              }}
             />
             <div className="flex justify-end mt-4">
               <button
-                className="btn btn-sm btn-neutral"
+                className="btn btn-sm bg-gray-300 hover:bg-gray-400 text-black font-semibold border border-gray-500 px-4 py-2 rounded shadow"
                 onClick={() => setMostrarMapa(false)}
               >
-                Cerrar
+                ❌ Cerrar
               </button>
             </div>
           </div>

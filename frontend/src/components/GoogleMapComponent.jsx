@@ -28,7 +28,7 @@ const getIconByTipo = (tipo) => {
   }
 };
 
-const GoogleMapComponent = ({ puntos, ruta }) => {
+const GoogleMapComponent = ({ puntos, ruta, onMarkerClick }) => {
   const puntosValidos = puntos.filter(
     (p) =>
       typeof p.latitud === "number" &&
@@ -40,8 +40,6 @@ const GoogleMapComponent = ({ puntos, ruta }) => {
   const center = puntosValidos.length
     ? { lat: puntosValidos[0].latitud, lng: puntosValidos[0].longitud }
     : { lat: -12.0464, lng: -77.0428 };
-
-  console.log("CLAVE API desde ENV:", import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -86,6 +84,7 @@ const GoogleMapComponent = ({ puntos, ruta }) => {
               color: "#000",
               fontSize: "10px",
             }}
+            onClick={() => onMarkerClick && onMarkerClick(p)} // <- añadido
           />
         ))}
 
