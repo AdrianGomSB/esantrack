@@ -84,7 +84,7 @@ const GoogleMapComponent = ({ puntos, ruta, onMarkerClick }) => {
               color: "#000",
               fontSize: "10px",
             }}
-            onClick={() => onMarkerClick && onMarkerClick(p)} // <- añadido
+            onClick={() => onMarkerClick(p)}
           />
         ))}
 

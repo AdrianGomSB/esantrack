@@ -631,6 +631,7 @@ const Rutas = () => {
               ruta={rutaSeleccionadaParaPuntos}
               onMarkerClick={(p) => {
                 setPuntoSeleccionado(p);
+                setDireccionSeleccionada(p.direccion || "");
                 setMostrarModalEditarPuntos(true);
               }}
             />
