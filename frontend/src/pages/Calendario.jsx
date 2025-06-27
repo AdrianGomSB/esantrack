@@ -495,22 +495,9 @@ const Calendario = () => {
                             setEmpresaInput(emp.nombre);
                             setNuevoPunto((prev) => ({
                               ...prev,
-                              direccion: emp.direccion || "", // esto rellena automáticamente el campo
+                              latitud: null,
+                              longitud: null,
                             }));
-
-                            if (emp.direccion) {
-                              const coords = await geocodificarDireccion(
-                                emp.direccion
-                              );
-                              if (coords) {
-                                setNuevoPunto((prev) => ({
-                                  ...prev,
-                                  latitud: coords.lat,
-                                  longitud: coords.lng,
-                                }));
-                              }
-                            }
-
                             setEmpresaSugerencias([]);
                           }}
                         >

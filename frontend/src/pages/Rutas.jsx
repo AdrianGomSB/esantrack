@@ -493,22 +493,6 @@ const Rutas = () => {
                     }
                   />
                 </label>
-                {puntoSeleccionado.estado?.toLowerCase() === "completado" && (
-                  <label>
-                    Fichas logradas:
-                    <input
-                      type="number"
-                      className="input input-bordered input-sm w-full"
-                      value={puntoSeleccionado.fichas_logradas}
-                      onChange={(e) =>
-                        setPuntoSeleccionado({
-                          ...puntoSeleccionado,
-                          fichas_logradas: e.target.value,
-                        })
-                      }
-                    />
-                  </label>
-                )}
 
                 <button
                   className="btn btn-info"
