@@ -14,6 +14,8 @@ const usersRoutes = require("./routes/userRoutes");
 const auditoriaRoutes = require("./routes/auditoriaRoutes");
 
 const app = express();
+
+// ⚡ Usa regex para aceptar todos los subdominios .vercel.app y localhost
 const allowedOrigins = [
   "http://localhost:5173",
   "https://esantrack.vercel.app",
@@ -24,15 +26,13 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app")
-      ) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+      if (!origin) {
+        return callback(null, true);
       }
+      if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
