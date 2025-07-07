@@ -18,6 +18,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://esantrack.vercel.app",
   "https://esantrack-git-main-adrians-projects-b4e8c77f.vercel.app",
+  "https://uesantrack.vercel.app",
 ];
 
 app.use(
@@ -46,6 +47,7 @@ app.use("/api/geocodificar", geocodificarRoute);
 app.use("/api/users", usersRoutes);
 app.use("/api/auditoria", auditoriaRoutes);
 
-app.listen(5000, () => {
-  console.log("Servidor en el puerto 5000");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Servidor en el puerto ${PORT}`);
 });
