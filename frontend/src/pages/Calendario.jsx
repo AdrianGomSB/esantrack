@@ -574,6 +574,7 @@ const Calendario = () => {
                 >
                   <option value="">-- Selecciona un motivo --</option>
                   {/* <option value="Visita de cartera">Visita de cartera</option> */}
+
                   <option value="Presentación portafolio">
                     Presentación portafolio
                   </option>

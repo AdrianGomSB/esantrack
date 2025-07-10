@@ -15,9 +15,10 @@ const auditoriaRoutes = require("./routes/auditoriaRoutes");
 
 const app = express();
 
-// ⚡ Usa regex para aceptar todos los subdominios .vercel.app y localhost
+// ✅ Agregamos 5174 para que funcione en tu localhost actual
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174",
   "https://esantrack.vercel.app",
   "https://esantrack-git-main-adrians-projects-b4e8c77f.vercel.app",
   "https://uesantrack.vercel.app",
