@@ -1,13 +1,18 @@
 import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import axios from "../utils/axiosConfig";
+import { Eye, EyeOff } from "lucide-react";
+
 const Perfil = () => {
   const [perfil, setPerfil] = useState({
     nombre: "",
     username: "",
     password: "",
+    confirmarPassword: "",
   });
   const [mensaje, setMensaje] = useState("");
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+
   const usuarioActual = JSON.parse(localStorage.getItem("usuario"));
 
   useEffect(() => {
@@ -16,6 +21,7 @@ const Perfil = () => {
         nombre: usuarioActual.nombre,
         username: usuarioActual.username,
         password: "",
+        confirmarPassword: "",
       });
     }
   }, []);
@@ -26,6 +32,11 @@ const Perfil = () => {
 
   const handleGuardar = async () => {
     try {
+      if (perfil.password !== perfil.confirmarPassword) {
+        setMensaje("Las contraseñas no coinciden.");
+        return;
+      }
+
       const token = localStorage.getItem("token");
       const payload = {
         nombre: perfil.nombre,
@@ -41,6 +52,7 @@ const Perfil = () => {
       });
 
       setMensaje("Perfil actualizado correctamente.");
+      setPerfil({ ...perfil, password: "", confirmarPassword: "" });
     } catch (err) {
       console.error(err);
       setMensaje("Error al actualizar perfil.");
@@ -91,12 +103,35 @@ const Perfil = () => {
             <label className="block text-sm font-medium mb-1">
               Nueva contraseña
             </label>
+            <div className="relative">
+              <input
+                name="password"
+                type={mostrarPassword ? "text" : "password"}
+                className="input input-bordered w-full pr-10"
+                placeholder="Dejar en blanco para no cambiar"
+                value={perfil.password}
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500"
+                onClick={() => setMostrarPassword(!mostrarPassword)}
+              >
+                {mostrarPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Confirmar nueva contraseña
+            </label>
             <input
-              name="password"
-              type="password"
+              name="confirmarPassword"
+              type={mostrarPassword ? "text" : "password"}
               className="input input-bordered w-full"
-              placeholder="Dejar en blanco para no cambiar"
-              value={perfil.password}
+              placeholder="Repite la nueva contraseña"
+              value={perfil.confirmarPassword}
               onChange={handleChange}
             />
           </div>
