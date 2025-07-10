@@ -21,7 +21,10 @@ const actualizarUsuario = async (req, res) => {
   const { role, equipo, activo, password, nombre, username } = req.body;
 
   try {
-    const resultOriginal = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+    const resultOriginal = await pool.query(
+      "SELECT * FROM users WHERE id = $1",
+      [id]
+    );
     const original = resultOriginal.rows[0];
     if (!original) {
       return res.status(404).json({ error: "Usuario no encontrado" });
@@ -62,14 +65,20 @@ const actualizarUsuario = async (req, res) => {
     }
 
     valores.push(id);
-    const query = `UPDATE users SET ${actualizaciones.join(", ")} WHERE id = $${i}`;
+    const query = `UPDATE users SET ${actualizaciones.join(
+      ", "
+    )} WHERE id = $${i}`;
     await pool.query(query, valores);
 
     // Registrar auditoría para cada campo
     const cambios = [
       { campo: "role", anterior: original.role, nuevo: role },
       { campo: "equipo", anterior: original.equipo, nuevo: equipo },
-      { campo: "activo", anterior: String(original.activo), nuevo: String(activo) },
+      {
+        campo: "activo",
+        anterior: String(original.activo),
+        nuevo: String(activo),
+      },
       { campo: "nombre", anterior: original.nombre, nuevo: nombre },
       { campo: "username", anterior: original.username, nuevo: username },
     ];
@@ -111,4 +120,35 @@ const actualizarUsuario = async (req, res) => {
 
 // Eliminar usuario
 const eliminarUsuario = async (req, res) => {
-  const
+  const { id } = req.params;
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+    const usuario = result.rows[0];
+
+    await pool.query("DELETE FROM users WHERE id = $1", [id]);
+
+    await registrarAuditoria({
+      usuario_id: req.user?.id || null,
+      tabla: "users",
+      registro_id: id,
+      campo: "registro",
+      valor_anterior: JSON.stringify({
+        username: usuario.username,
+        role: usuario.role,
+        equipo: usuario.equipo,
+      }),
+      valor_nuevo: "Eliminado",
+    });
+
+    res.json({ message: "Usuario eliminado" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al eliminar usuario" });
+  }
+};
+
+module.exports = {
+  getAllUsers,
+  actualizarUsuario,
+  eliminarUsuario,
+};
