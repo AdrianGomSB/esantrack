@@ -19,9 +19,27 @@ router.get(
 router.patch(
   "/:id",
   verifyToken,
-  verificarRol(["admin", "supervisor", "asesor"]),
+  (req, res, next) => {
+    const usuarioIdToken = req.usuario.id;
+    const usuarioIdParam = parseInt(req.params.id, 10);
+    if (req.usuario.role === "admin") {
+      return next();
+    }
+    if (usuarioIdToken === usuarioIdParam) {
+      if ("role" in req.body || "equipo" in req.body) {
+        return res
+          .status(403)
+          .json({ message: "No está permitido modificar rol o equipo" });
+      }
+      return next();
+    }
+    return res
+      .status(403)
+      .json({ message: "No autorizado para actualizar este usuario" });
+  },
   actualizarUsuario
 );
+
 router.delete("/:id", verifyToken, verificarRol(["admin"]), eliminarUsuario);
 
 module.exports = router;
