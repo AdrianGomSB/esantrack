@@ -16,7 +16,12 @@ router.get(
   verificarRol(["admin", "supervisor"]),
   getAllUsers
 );
-router.patch("/:id", verifyToken, verificarRol(["admin"]), actualizarUsuario);
+router.patch(
+  "/:id",
+  verifyToken,
+  verificarRol(["admin", "supervisor", "asesor"]),
+  actualizarUsuario
+);
 router.delete("/:id", verifyToken, verificarRol(["admin"]), eliminarUsuario);
 
 module.exports = router;
