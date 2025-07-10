@@ -41,5 +41,4 @@ router.patch(
 );
 
 router.delete("/:id", verifyToken, verificarRol(["admin"]), eliminarUsuario);
-
 module.exports = router;
