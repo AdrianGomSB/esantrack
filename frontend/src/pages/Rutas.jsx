@@ -259,7 +259,7 @@ const Rutas = () => {
                     <td className="px-3 py-2">{ruta.titulo}</td>
                     <td className="px-3 py-2">
                       {ruta.fecha
-                        ? new Date(ruta.fecha).toLocaleDateString()
+                        ? ruta.fecha.slice(0, 10).split("-").reverse().join("/")
                         : "-"}
                     </td>
                     <td className="px-3 py-2">{ruta.evento_titulo || "-"}</td>

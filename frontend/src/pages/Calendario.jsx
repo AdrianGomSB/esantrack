@@ -715,10 +715,10 @@ const Calendario = () => {
                           latitud: puntosRuta[i].latitud,
                           longitud: puntosRuta[i].longitud,
                           orden: i + 1,
-                          estado: puntosRuta[i].estado,
+                          estado: puntosRuta[i].estado || "pendiente",
                           tipo: puntosRuta[i].tipo || null,
                           nombre: puntosRuta[i].empresa || null,
-                          fecha: puntosRuta[i].fecha,
+                          fecha: `${puntosRuta[i].fecha}T12:00:00`, // ✅ Aquí corregimos
                           hora_inicio: puntosRuta[i].hora_inicio,
                           hora_fin: puntosRuta[i].hora_fin,
                           motivo_visita: puntosRuta[i].motivo_visita || "",

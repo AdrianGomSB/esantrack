@@ -1,9 +1,8 @@
 const pool = require("../models/db");
 const { registrarAuditoria } = require("./auditoriaController");
 
-// Crear punto en una ruta
 const crearPunto = async (req, res) => {
-  const {
+  let {
     ruta_id,
     latitud,
     longitud,
@@ -24,6 +23,24 @@ const crearPunto = async (req, res) => {
   const id_user = req.user.userId;
 
   try {
+    // ✅ Corregir la fecha aquí
+    let fechaFinal = fecha;
+
+    if (fecha) {
+      // Si viene solo YYYY-MM-DD, agregamos hora media para evitar desfases
+      if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        fechaFinal = `${fecha}T12:00:00`;
+      }
+
+      const fechaObj = new Date(fechaFinal);
+
+      // ⚡ Obtener fecha local correcta
+      const year = fechaObj.getFullYear();
+      const month = String(fechaObj.getMonth() + 1).padStart(2, "0");
+      const day = String(fechaObj.getDate()).padStart(2, "0");
+      fechaFinal = `${year}-${month}-${day}`;
+    }
+
     const result = await pool.query(
       `INSERT INTO puntos_ruta 
         (ruta_id, latitud, longitud, orden, estado, tipo, nombre, direccion, justificacion, fecha, hora_inicio, hora_fin, user_id, metas_fichas, motivo_visita, fichas_logradas)
@@ -39,7 +56,7 @@ const crearPunto = async (req, res) => {
         nombre,
         direccion,
         justificacion,
-        fecha,
+        fechaFinal, // ✅ usamos la fecha corregida
         hora_inicio,
         hora_fin,
         id_user,
