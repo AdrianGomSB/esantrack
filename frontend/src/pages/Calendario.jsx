@@ -7,6 +7,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from "@fullcalendar/core/locales/es";
 import Layout from "../components/Layout";
 import FiltrosCalendario from "../components/FiltrosCalendario";
+import GoogleMapModal from "../components/GoogleMapModal";
 
 import { getColoresPorTipo } from "../utils/eventUtils";
 import { transformarEventosDesdePuntosRuta } from "../utils/eventUtils";
@@ -202,11 +203,12 @@ const Calendario = () => {
           slotLabelFormat={{
             hour: "2-digit",
             minute: "2-digit",
-            hour12: false, // o true para formato 12h
+            hour12: false,
           }}
           eventClick={(info) => {
             const evento = info.event;
             setEventoSeleccionado({
+              id: evento.id,
               title: evento.title,
               date: evento.startStr,
               description: evento.extendedProps.direccion,
@@ -762,10 +764,6 @@ const Calendario = () => {
               <span className="font-semibold">Fecha:</span>{" "}
               {eventoSeleccionado.date?.split("T")[0]}
             </p>
-            <p>
-              <span className="font-semibold">Dirección:</span>{" "}
-              {eventoSeleccionado.description}
-            </p>
 
             <div className="mt-3">
               <label className="block text-sm font-medium mb-1">Estado</label>
@@ -780,18 +778,11 @@ const Calendario = () => {
                 }
               >
                 <option value="Pendiente">Pendiente</option>
-                <option value="En progreso">En progreso</option>
+                <option value="Cancelado">Cancelado</option>
+                <option value="Completado">Reprogramado</option>
                 <option value="Completado">Completado</option>
               </select>
             </div>
-            {eventoSeleccionado?.latitud && eventoSeleccionado?.longitud && (
-              <div className="mt-4">
-                <GoogleMapModal
-                  lat={eventoSeleccionado.latitud}
-                  lng={eventoSeleccionado.longitud}
-                />
-              </div>
-            )}
 
             <div className="flex justify-between mt-5">
               <button
