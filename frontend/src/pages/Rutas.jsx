@@ -452,7 +452,7 @@ const Rutas = () => {
       )}
       {/* MODAL EDITAR PUNTOS */}
       {mostrarModalEditarPuntos && (
-        <div className="fixed inset-0 z-[999] bg-transparent flex items-center justify-center">
+        <div className="fixed inset-0 z-[999] bg-black flex items-center justify-center">
           <div className="bg-white w-full max-w-6xl rounded-lg shadow-xl p-6 relative">
             <h2 className="text-xl font-bold text-center text-blue-600 mb-4">
               Editar Puntos de la Ruta
