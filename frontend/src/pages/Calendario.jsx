@@ -575,8 +575,6 @@ const Calendario = () => {
                   }
                 >
                   <option value="">-- Selecciona un motivo --</option>
-                  {/* <option value="Visita de cartera">Visita de cartera</option> */}
-
                   <option value="Presentación portafolio">
                     Presentación portafolio
                   </option>
@@ -757,12 +755,16 @@ const Calendario = () => {
               Detalles del Punto
             </h2>
             <p>
-              <span className="font-semibold">Título:</span>{" "}
+              <span className="font-semibold">Título:</span>
               {eventoSeleccionado.title}
             </p>
             <p>
-              <span className="font-semibold">Fecha:</span>{" "}
+              <span className="font-semibold">Fecha:</span>
               {eventoSeleccionado.date?.split("T")[0]}
+            </p>
+            <p>
+              <span className="font-semibold">Hora:</span>
+              {eventoSeleccionado.horaInicio}
             </p>
 
             <div className="mt-3">

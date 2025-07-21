@@ -165,15 +165,7 @@ const Rutas = () => {
               <option value="completo">Completos</option>
               <option value="incompleto">Incompletos</option>
             </select>
-            <select
-              className="select select-bordered"
-              value={filtroConPuntos}
-              onChange={(e) => setFiltroConPuntos(e.target.value)}
-            >
-              <option value="">Con o sin puntos</option>
-              <option value="con">Con puntos</option>
-              <option value="sin">Sin puntos</option>
-            </select>
+
             <input
               type="date"
               className="input input-bordered"
@@ -214,11 +206,13 @@ const Rutas = () => {
               >
                 <option value="">Todos los usuarios</option>
                 {usuarios
-                  .filter((u) =>
-                    usuario.role === "admin"
-                      ? !filtroEquipo || u.equipo === filtroEquipo
-                      : u.equipo === usuario.equipo
-                  )
+                  .filter((u) => {
+                    if (usuario.role === "admin") {
+                      return filtroEquipo ? u.equipo === filtroEquipo : true;
+                    } else {
+                      return u.equipo === usuario.equipo;
+                    }
+                  })
                   .map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.nombre}

@@ -1,31 +1,53 @@
 const pool = require("../models/db");
 
-// Obtener todas las rutas del usuario
 const getRutas = async (req, res) => {
   try {
-    const rutasRes = await pool.query(
-      `SELECT r.*, e.titulo AS evento_titulo
-   FROM rutas r
-   LEFT JOIN eventos e ON r.evento_id = e.id
-   WHERE r.usuario_id = $1
-   ORDER BY r.created_at DESC`,
-      [req.user.userId]
-    );
+    const { role, userId, equipo } = req.user;
+
+    let rutasRes;
+
+    if (role === "admin") {
+      rutasRes = await pool.query(
+        `SELECT r.*, e.titulo AS evento_titulo
+         FROM rutas r
+         LEFT JOIN eventos e ON r.evento_id = e.id
+         ORDER BY r.created_at DESC`
+      );
+    } else if (role === "supervisor") {
+      rutasRes = await pool.query(
+        `SELECT DISTINCT r.*, e.titulo AS evento_titulo
+         FROM rutas r
+         LEFT JOIN eventos e ON r.evento_id = e.id
+         LEFT JOIN puntos_ruta pr ON pr.ruta_id = r.id
+         LEFT JOIN users u ON pr.user_id = u.id
+         WHERE u.equipo = $1
+         ORDER BY r.created_at DESC`,
+        [equipo]
+      );
+    } else {
+      rutasRes = await pool.query(
+        `SELECT r.*, e.titulo AS evento_titulo
+         FROM rutas r
+         LEFT JOIN eventos e ON r.evento_id = e.id
+         WHERE r.usuario_id = $1
+         ORDER BY r.created_at DESC`,
+        [userId]
+      );
+    }
 
     const rutas = rutasRes.rows;
 
     for (let ruta of rutas) {
       const puntosRes = await pool.query(
         `SELECT pr.id, pr.latitud, pr.longitud, pr.estado, pr.orden, 
-            pr.direccion, pr.justificacion, pr.tipo, pr.nombre,
-            pr.user_id, u.equipo
-     FROM puntos_ruta pr
-     LEFT JOIN users u ON pr.user_id = u.id
-     WHERE pr.ruta_id = $1 
-     ORDER BY pr.orden ASC`,
+                pr.direccion, pr.justificacion, pr.tipo, pr.nombre,
+                pr.user_id, u.equipo
+         FROM puntos_ruta pr
+         LEFT JOIN users u ON pr.user_id = u.id
+         WHERE pr.ruta_id = $1 
+         ORDER BY pr.orden ASC`,
         [ruta.id]
       );
-
       ruta.puntos = puntosRes.rows;
     }
 

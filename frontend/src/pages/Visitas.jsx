@@ -168,21 +168,17 @@ const Visitas = () => {
           value={filtroMotivo}
           onChange={(e) => setFiltroMotivo(e.target.value)}
         >
-          <option value="">Todos los motivos</option>
-          <option value="Visita">Visita</option>
-          <option value="Charla">Charla</option>
-          <option value="Sin motivo">Sin motivo</option>
-        </select>
+          <option value="">-- Selecciona un motivo --</option>
 
-        <select
-          className="select select-bordered"
-          value={filtroProgreso}
-          onChange={(e) => setFiltroProgreso(e.target.value)}
-        >
-          <option value="">Todos los progresos</option>
-          <option value=">">Logro mayor que meta</option>
-          <option value="<">Logro menor que meta</option>
-          <option value="=">Logro igual a meta</option>
+          <option value="Presentación portafolio">
+            Presentación portafolio
+          </option>
+          <option value="Requerimiento de capacitación">
+            Requerimiento de capacitación
+          </option>
+          <option value="Reunión alineamiento">Reunión alineamiento</option>
+          <option value="Inicio del programa">Inicio del programa</option>
+          <option value="Cierre del programa">Cierre del programa</option>
         </select>
 
         {usuario.role?.toLowerCase() === "admin" && (

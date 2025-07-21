@@ -15,7 +15,6 @@ const auditoriaRoutes = require("./routes/auditoriaRoutes");
 
 const app = express();
 
-// ✅ Agregamos 5174 para que funcione en tu localhost actual
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",

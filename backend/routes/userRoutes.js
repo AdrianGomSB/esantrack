@@ -10,7 +10,6 @@ const {
 const { verifyToken } = require("../middlewares/authMiddleware");
 const verificarRol = require("../middlewares/verificarRol");
 
-// Obtener todos los usuarios (admin y supervisor)
 router.get(
   "/",
   verifyToken,
@@ -18,7 +17,6 @@ router.get(
   getAllUsers
 );
 
-// Actualizar usuario (admin o el propio usuario)
 router.patch(
   "/:id",
   verifyToken,
@@ -26,7 +24,6 @@ router.patch(
     const usuarioIdToken = req.user.userId; // ← CORREGIDO
     const usuarioIdParam = parseInt(req.params.id, 10);
 
-    // Si es admin, puede editar cualquiera
     if (req.user.role === "admin") {
       return next();
     }
