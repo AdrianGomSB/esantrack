@@ -11,6 +11,8 @@ const Organizacion = () => {
   const [nuevaOrganizacion, setNuevaOrganizacion] = useState({
     nombre: "",
     tipo: "Empresa",
+    direccion: "",
+    sede: "",
   });
 
   useEffect(() => {
@@ -33,6 +35,8 @@ const Organizacion = () => {
     try {
       const token = localStorage.getItem("token");
 
+      console.log("Guardando:", nuevaOrganizacion); // ✅ Aquí lo pones
+
       if (nuevaOrganizacion.id) {
         await axios.put(
           `/organizaciones/${nuevaOrganizacion.id}`,
@@ -47,13 +51,21 @@ const Organizacion = () => {
         });
       }
 
-      setNuevaOrganizacion({ nombre: "", tipo: "Empresa" });
+      // Solución corregida aquí también
+      setNuevaOrganizacion({
+        nombre: "",
+        tipo: "Empresa",
+        direccion: "",
+        sede: "",
+      });
+
       setMostrarModal(false);
       obtenerOrganizaciones();
     } catch (error) {
       console.error("Error al guardar organización:", error);
     }
   };
+
   const eliminarOrganizacion = async (id) => {
     if (!confirm("¿Estás seguro de eliminar esta organización?")) return;
 
@@ -185,6 +197,21 @@ const Organizacion = () => {
               />
             </div>
 
+            <div className="mb-4">
+              <label className="block mb-1 font-medium">Sede</label>
+              <input
+                type="text"
+                value={nuevaOrganizacion.sede}
+                onChange={(e) =>
+                  setNuevaOrganizacion({
+                    ...nuevaOrganizacion,
+                    sede: e.target.value,
+                  })
+                }
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setMostrarModal(false)}
@@ -210,6 +237,7 @@ const Organizacion = () => {
               <th className="px-4 py-2 text-left">Nombre</th>
               <th className="px-4 py-2 text-left">Tipo</th>
               <th className="px-4 py-2 text-left">Dirección</th>
+              <th className="px-4 py-2 text-left">Sede</th>
               <th className="px-4 py-2 text-left">Acciones</th>
             </tr>
           </thead>
@@ -219,6 +247,8 @@ const Organizacion = () => {
                 <td className="px-4 py-2">{org.nombre}</td>
                 <td className="px-4 py-2">{org.tipo}</td>
                 <td className="px-4 py-2">{org.direccion}</td>
+                <td className="px-4 py-2">{org.sede}</td>
+
                 <td className="px-4 py-2 space-x-2">
                   <button
                     className="btn btn-xs btn-outline"

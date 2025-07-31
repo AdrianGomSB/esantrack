@@ -1,7 +1,6 @@
 const pool = require("../models/db");
 const { registrarAuditoria } = require("./auditoriaController");
 
-// Obtener todas las organizaciones del usuario autenticado
 const getOrganizaciones = async (req, res) => {
   const userId = req.user.userId;
   try {
@@ -40,14 +39,13 @@ const buscarOrganizacionesPorNombre = async (req, res) => {
   }
 };
 
-// Crear una nueva organización
 const crearOrganizacion = async (req, res) => {
   const userId = req.user.userId;
-  const { nombre, tipo, direccion } = req.body;
+  const { nombre, tipo, direccion, sede } = req.body;
   try {
     const result = await pool.query(
-      "INSERT INTO organizaciones (nombre, tipo, direccion, user_id) VALUES ($1, $2, $3, $4) RETURNING *",
-      [nombre, tipo, direccion, userId]
+      "INSERT INTO organizaciones (nombre, tipo, direccion, sede, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [nombre, tipo, direccion, sede, userId]
     );
 
     await registrarAuditoria({
@@ -69,7 +67,7 @@ const crearOrganizacion = async (req, res) => {
 const actualizarOrganizacion = async (req, res) => {
   const userId = req.user.userId;
   const { id } = req.params;
-  const { nombre, tipo, direccion } = req.body;
+  const { nombre, tipo, direccion, sede } = req.body;
 
   try {
     const original = await pool.query(
@@ -85,17 +83,17 @@ const actualizarOrganizacion = async (req, res) => {
 
     const result = await pool.query(
       `UPDATE organizaciones
-       SET nombre = $1, tipo = $2, direccion = $3
-       WHERE id = $4 AND user_id = $5
-       RETURNING *`,
-      [nombre, tipo, direccion, id, userId]
+   SET nombre = $1, tipo = $2, direccion = $3, sede = $4
+   WHERE id = $5 AND user_id = $6
+   RETURNING *`,
+      [nombre, tipo, direccion, sede, id, userId]
     );
 
-    // Auditoría por cada campo cambiado
     const campos = [
       { campo: "nombre", anterior: prev.nombre, nuevo: nombre },
       { campo: "tipo", anterior: prev.tipo, nuevo: tipo },
       { campo: "direccion", anterior: prev.direccion, nuevo: direccion },
+      { campo: "sede", anterior: prev.sede, nuevo: sede },
     ];
 
     for (const c of campos) {
@@ -143,7 +141,9 @@ const eliminarOrganizacion = async (req, res) => {
         nombre: org.nombre,
         tipo: org.tipo,
         direccion: org.direccion,
+        sede: org.sede,
       }),
+
       valor_nuevo: "Eliminado",
     });
 
