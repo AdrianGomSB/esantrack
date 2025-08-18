@@ -130,7 +130,7 @@ const Kpi = () => {
       const fecha = new Date(p.fecha);
       const estado = p.estado?.toLowerCase();
       const motivo = p.motivo_visita || "Otro";
-      const nombreEmpresa = p.nombre || "";
+      const nombreEmpresa = (p.nombre || "").trim(); // normalizado
 
       if ((desde && fecha < desde) || (hasta && fecha > hasta)) continue;
       if (filtroUsuario && String(p.user_id) !== String(filtroUsuario))
@@ -274,7 +274,7 @@ const Kpi = () => {
             ...new Set(
               puntos
                 .filter((p) => String(p.user_id) === filtroUsuario)
-                .map((p) => p.nombre)
+                .map((p) => (p.nombre || "").trim()) // normalizado en opciones
                 .filter(Boolean)
             ),
           ].map((nombre, i) => (
@@ -296,7 +296,7 @@ const Kpi = () => {
               { label: "Pendientes", value: kpis.estados.pendiente ?? 0 },
               empresaSeleccionada && {
                 label: `Visitas a ${empresaSeleccionada}`,
-                value: kpis.visitasEmpresa?.[empresaSeleccionada] ?? 0,
+                value: kpis.visitasEmpresa?.[empresaSeleccionada?.trim()] ?? 0,
               },
             ]
               .filter(Boolean)
