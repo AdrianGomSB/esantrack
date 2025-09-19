@@ -9,6 +9,14 @@ const Rutas = () => {
   const [filtroUsuario, setFiltroUsuario] = useState("");
   const [filtroEquipo, setFiltroEquipo] = useState("");
   const usuario = JSON.parse(localStorage.getItem("usuario"));
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
+  const [empresaInput, setEmpresaInput] = useState("");
+  const [nuevoPunto, setNuevoPunto] = useState({
+    direccion: "",
+    hora_inicio: "08:00",
+    hora_fin: "09:00",
+    motivo_visita: "",
+  });
 
   const [rutas, setRutas] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -140,7 +148,6 @@ const Rutas = () => {
         <p>No hay rutas registradas.</p>
       ) : (
         <>
-          {/* Filtros */}
           <div className="grid md:grid-cols-3 gap-4 mb-4">
             <input
               type="text"
@@ -356,85 +363,248 @@ const Rutas = () => {
             <h2 className="text-xl font-bold text-center text-blue-600 mb-4">
               Crear Puntos de la Ruta
             </h2>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="h-[400px]">
-                <MapContainer
-                  center={[-12.0464, -77.0428]}
-                  zoom={13}
-                  style={{ height: "100%", width: "100%" }}
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <AgregarPuntoMapa />
-                  {puntosRuta.map((p, i) => (
-                    <Marker
-                      key={i}
-                      position={{ lat: p.latitud, lng: p.longitud }}
-                      icon={{
-                        url: getIconByTipo(p.tipo),
-                        scaledSize: new window.google.maps.Size(40, 40),
-                        labelOrigin: new window.google.maps.Point(20, -10), // sube el texto más arriba
-                      }}
-                      label={{
-                        text: p.nombre || "",
-                        color: "#000",
-                        fontSize: "10px",
-                        fontWeight: "bold",
-                      }}
-                    />
-                  ))}
-                  {puntosRuta.length > 1 && (
-                    <Polyline
-                      positions={puntosRuta.map((p) => [p.latitud, p.longitud])}
-                      color="blue"
-                    />
-                  )}
-                </MapContainer>
+              {/* Lista de puntos */}
+              <div className="h-[300px] overflow-y-auto border rounded p-3 bg-gray-50">
+                <h3 className="text-lg font-semibold text-blue-700 mb-2">
+                  Puntos Agregados
+                </h3>
+                {puntosRuta.length === 0 ? (
+                  <p className="text-sm text-gray-500">
+                    Aún no se han agregado puntos.
+                  </p>
+                ) : (
+                  <ul className="space-y-2 text-sm">
+                    {puntosRuta.map((punto, index) => (
+                      <li
+                        key={index}
+                        className="border rounded px-3 py-2 bg-white shadow-sm flex justify-between items-start"
+                      >
+                        <div>
+                          <p>
+                            <span className="font-semibold">#{index + 1}</span>{" "}
+                            - <span>{punto.empresa}</span>
+                          </p>
+                          <p className="text-xs text-gray-500 italic">
+                            {punto.tipo} | {punto.hora_inicio} -{" "}
+                            {punto.hora_fin}
+                          </p>
+                        </div>
+                        <button
+                          className="text-red-500 hover:text-red-700 text-xs"
+                          onClick={() => {
+                            const confirmacion = confirm(
+                              "¿Eliminar este punto?"
+                            );
+                            if (confirmacion) {
+                              setPuntosRuta((prev) =>
+                                prev.filter((_, i) => i !== index)
+                              );
+                            }
+                          }}
+                        >
+                          ❌
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-              <div>
-                <ul className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                  {puntosRuta.map((p, index) => (
-                    <li key={index} className="border p-2 rounded-md text-sm">
-                      Punto #{index + 1} - Lat: {p.latitud.toFixed(4)} - Lng:{" "}
-                      {p.longitud.toFixed(4)}
-                    </li>
-                  ))}
-                </ul>
+
+              {/* Formulario */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">Tipo de Punto</label>
+                <select
+                  className="select select-bordered w-full"
+                  value={categoriaSeleccionada}
+                  onChange={(e) => setCategoriaSeleccionada(e.target.value)}
+                >
+                  <option value="Empresas">Empresas</option>
+                  <option value="Institutos">Institutos</option>
+                  <option value="Ferias">Ferias</option>
+                  <option value="Charlas">Charlas</option>
+                  <option value="Activaciones">Activaciones</option>
+                </select>
+
+                <label className="text-sm font-medium">Nombre</label>
+                <input
+                  type="text"
+                  className="input input-bordered w-full"
+                  value={empresaInput}
+                  onChange={(e) => setEmpresaInput(e.target.value)}
+                  placeholder={`Escribe nombre de ${categoriaSeleccionada.toLowerCase()}`}
+                />
+
+                <label className="text-sm font-medium">Dirección</label>
+                <input
+                  type="text"
+                  className="input input-bordered w-full"
+                  value={nuevoPunto.direccion}
+                  onChange={(e) =>
+                    setNuevoPunto((prev) => ({
+                      ...prev,
+                      direccion: e.target.value,
+                    }))
+                  }
+                />
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-sm font-medium">Hora Inicio</label>
+                    <input
+                      type="time"
+                      className="input input-bordered w-full"
+                      value={nuevoPunto.hora_inicio}
+                      onChange={(e) =>
+                        setNuevoPunto((prev) => ({
+                          ...prev,
+                          hora_inicio: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Hora Fin</label>
+                    <input
+                      type="time"
+                      className="input input-bordered w-full"
+                      value={nuevoPunto.hora_fin}
+                      onChange={(e) =>
+                        setNuevoPunto((prev) => ({
+                          ...prev,
+                          hora_fin: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                <label className="text-sm font-medium">
+                  Motivo de la Visita
+                </label>
+                <select
+                  className="select select-bordered w-full"
+                  value={nuevoPunto.motivo_visita}
+                  onChange={(e) =>
+                    setNuevoPunto((prev) => ({
+                      ...prev,
+                      motivo_visita: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="">-- Selecciona un motivo --</option>
+                  <option value="Presentación portafolio">
+                    Presentación portafolio
+                  </option>
+                  <option value="Requerimiento de capacitación">
+                    Requerimiento de capacitación
+                  </option>
+                  <option value="Reunión alineamiento">
+                    Reunión alineamiento
+                  </option>
+                  <option value="Inicio del programa">
+                    Inicio del programa
+                  </option>
+                  <option value="Cierre del programa">
+                    Cierre del programa
+                  </option>
+                </select>
+
+                <div className="flex gap-2 mt-2">
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => {
+                      if (!empresaInput.trim() || !nuevoPunto.direccion) {
+                        alert("Falta nombre o dirección.");
+                        return;
+                      }
+                      setPuntosRuta((prev) => [
+                        ...prev,
+                        {
+                          ...nuevoPunto,
+                          tipo: categoriaSeleccionada,
+                          empresa: empresaInput,
+                          fecha: rutaSeleccionadaParaPuntos.fecha,
+                        },
+                      ]);
+                      setNuevoPunto({
+                        direccion: "",
+                        hora_inicio: "08:00",
+                        hora_fin: "09:00",
+                        motivo_visita: "",
+                      });
+                      setEmpresaInput("");
+                    }}
+                  >
+                    Añadir Punto
+                  </button>
+
+                  <button
+                    className="btn btn-sm btn-outline"
+                    onClick={() => {
+                      setNuevoPunto({
+                        direccion: "",
+                        hora_inicio: "08:00",
+                        hora_fin: "09:00",
+                        motivo_visita: "",
+                      });
+                      setEmpresaInput("");
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             </div>
+
             <div className="flex justify-end gap-2 mt-4">
               <button
                 className="btn btn-outline"
-                onClick={() => {
-                  setMostrarModalCrearPuntos(false);
-                  setPuntosRuta([]);
-                }}
+                onClick={() => setMostrarModalCrearPuntos(false)}
               >
-                Cancelar
+                Cerrar
               </button>
               <button
                 className="btn btn-primary"
                 onClick={async () => {
                   try {
                     for (let i = 0; i < puntosRuta.length; i++) {
-                      await axios.post("/puntos_ruta", {
+                      const payload = {
                         ruta_id: rutaSeleccionadaParaPuntos.id,
-                        latitud: puntosRuta[i].latitud,
-                        longitud: puntosRuta[i].longitud,
+                        direccion: puntosRuta[i].direccion || "",
                         orden: i + 1,
-                        estado: puntosRuta[i].estado,
-                        tipo: puntosRuta[i].tipo || "",
-                        nombre: puntosRuta[i].nombre || "",
+                        estado: puntosRuta[i].estado || "pendiente",
+                        tipo: puntosRuta[i].tipo || "general", // evita null
+                        nombre: puntosRuta[i].empresa || "Sin nombre",
+                        fecha: puntosRuta[i].fecha
+                          ? `${puntosRuta[i].fecha}T12:00:00`
+                          : null,
+                        hora_inicio: puntosRuta[i].hora_inicio || null,
+                        hora_fin: puntosRuta[i].hora_fin || null,
+                        motivo_visita: puntosRuta[i].motivo_visita || "",
+                      };
+
+                      console.log("📦 Payload que se envía:", payload);
+
+                      await axios.post("/puntos_ruta", payload, {
+                        headers: {
+                          Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                          )}`,
+                        },
                       });
                     }
-                    await obtenerRutas();
+
                     setMostrarModalCrearPuntos(false);
                     setPuntosRuta([]);
+                    navigate(`/rutas?ruta_id=${rutaSeleccionadaParaPuntos.id}`);
                   } catch (error) {
-                    alert("Error al guardar puntos nuevos");
-                    console.error(error);
+                    console.error(
+                      "❌ Error al guardar puntos:",
+                      error.response?.data || error.message
+                    );
+                    alert("Error al guardar puntos");
                   }
                 }}
               >
@@ -444,6 +614,7 @@ const Rutas = () => {
           </div>
         </div>
       )}
+
       {/* MODAL EDITAR PUNTOS */}
       {mostrarModalEditarPuntos && (
         <div className="fixed inset-0 z-[999] bg-black flex items-center justify-center">
