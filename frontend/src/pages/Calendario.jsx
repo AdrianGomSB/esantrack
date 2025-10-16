@@ -462,6 +462,7 @@ const Calendario = () => {
                     onChange={async (e) => {
                       const query = e.target.value;
                       setEmpresaInput(query);
+
                       if (query.trim()) {
                         try {
                           const res = await axios.get(
@@ -470,7 +471,6 @@ const Calendario = () => {
                             )}&tipo=${encodeURIComponent(
                               categoriaSeleccionada
                             )}`,
-
                             {
                               headers: {
                                 Authorization: `Bearer ${localStorage.getItem(
@@ -479,33 +479,36 @@ const Calendario = () => {
                               },
                             }
                           );
-                          setEmpresaSugerencias(res.data);
+
+                          // Forzar que siempre sea array
+                          setEmpresaSugerencias(
+                            Array.isArray(res.data) ? res.data : []
+                          );
                         } catch (err) {
                           console.error("Error buscando organizaciones:", err);
+                          setEmpresaSugerencias([]); // en error también dejamos array vacío
                         }
+                      } else {
+                        setEmpresaSugerencias([]);
                       }
                     }}
                     placeholder={`Escribe nombre de ${categoriaSeleccionada.toLowerCase()}`}
                   />
+
                   {empresaSugerencias.length > 0 && (
                     <ul className="absolute bg-white border shadow w-full max-h-40 overflow-y-auto z-50">
                       {empresaSugerencias.map((emp) => (
                         <li
                           key={emp.id}
                           className="px-3 py-1 hover:bg-blue-100 cursor-pointer"
-                          onClick={async () => {
+                          onClick={() => {
                             setEmpresaInput(emp.nombre);
                             setNuevoPunto((prev) => ({
                               ...prev,
-                              direccion: emp.direccion || "", // esto rellena automáticamente el campo
-                            }));
-
-                            setNuevoPunto((prev) => ({
-                              ...prev,
+                              direccion: emp.direccion || "",
                               latitud: null,
                               longitud: null,
                             }));
-
                             setEmpresaSugerencias([]);
                           }}
                         >

@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const path = require("path"); // 👈 nuevo
 
 const authRoutes = require("./routes/authRoutes");
 const visitasRoutes = require("./routes/visitasRoutes");
@@ -12,6 +13,8 @@ const organizacionesRoutes = require("./routes/organizacionesRoutes");
 const geocodificarRoute = require("./routes/geocodificarRoute");
 const usersRoutes = require("./routes/userRoutes");
 const auditoriaRoutes = require("./routes/auditoriaRoutes");
+
+const documentosRoutes = require("./routes/documentos");
 
 const app = express();
 
@@ -26,9 +29,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) {
-        return callback(null, true);
-      }
+      if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
         return callback(null, true);
       }
@@ -40,6 +41,8 @@ app.use(
 
 app.use(express.json());
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 app.use("/api/auth", authRoutes);
 app.use("/api/visitas", visitasRoutes);
 app.use("/api/eventos", eventosRoutes);
@@ -50,6 +53,8 @@ app.use("/api/organizaciones", organizacionesRoutes);
 app.use("/api/geocodificar", geocodificarRoute);
 app.use("/api/users", usersRoutes);
 app.use("/api/auditoria", auditoriaRoutes);
+
+app.use("/api/documentos", documentosRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

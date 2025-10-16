@@ -2,6 +2,20 @@ import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import axios from "../utils/axiosConfig";
 
+// Generación de Word en el navegador (sin backend)
+import { Document, Packer, Paragraph, AlignmentType } from "docx";
+import { saveAs } from "file-saver";
+
+// 👉 Base de API del backend (ej. https://esantrack-ylz6.onrender.com/api)
+//    La usamos para construir URLs absolutas a /uploads
+const API_BASE = import.meta.env.VITE_BACKEND_URL || "";
+const UPLOADS_BASE = API_BASE.replace(/\/api\/?$/, "");
+const buildFileUrl = (url) => {
+  if (!url) return "#";
+  if (/^https?:\/\//i.test(url)) return url; // ya es absoluta
+  return `${UPLOADS_BASE}${url}`; // prefija /uploads con la URL del backend
+};
+
 const Visitas = () => {
   const usuario = JSON.parse(localStorage.getItem("usuario")) || {};
 
@@ -9,10 +23,6 @@ const Visitas = () => {
   const [cargando, setCargando] = useState(true);
   const [paginaActual, setPaginaActual] = useState(1);
   const filasPorPagina = 10;
-
-  const [mostrarJustificacion, setMostrarJustificacion] = useState(false);
-  const [justificacionActual, setJustificacionActual] = useState("");
-  const [puntoSeleccionado, setPuntoSeleccionado] = useState(null);
 
   const [filtroTipo, setFiltroTipo] = useState("");
   const [filtroFechaInicio, setFiltroFechaInicio] = useState("");
@@ -25,66 +35,47 @@ const Visitas = () => {
   const [filtroUsuario, setFiltroUsuario] = useState("");
   const [filtroEquipo, setFiltroEquipo] = useState("");
 
+  // Cargar usuarios (si admin/supervisor)
   useEffect(() => {
     const cargarUsuarios = async () => {
       if (usuario.role === "admin" || usuario.role === "supervisor") {
-        const token = localStorage.getItem("token");
-        const { data } = await axios.get("/users", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setUsuarios(data);
+        try {
+          const token = localStorage.getItem("token");
+          const { data } = await axios.get("/users", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setUsuarios(data);
+        } catch (e) {
+          console.error("Error al cargar usuarios:", e);
+        }
       }
     };
     cargarUsuarios();
   }, []);
 
-  useEffect(() => {
-    const obtenerPuntosRuta = async () => {
-      try {
-        setCargando(true);
-        const token = localStorage.getItem("token");
-        const { data } = await axios.get("/puntos_ruta", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setPuntosRuta(data);
-      } catch (error) {
-        console.error("Error al obtener puntos de ruta:", error);
-      } finally {
-        setCargando(false);
-      }
-    };
-
-    obtenerPuntosRuta();
-  }, []);
-
-  const guardarJustificacion = async () => {
+  // Cargar puntos de ruta
+  const refetchPuntos = async () => {
     try {
-      await axios.put(`/puntos_ruta/${puntoSeleccionado.id}`, {
-        justificacion: justificacionActual,
-      });
-
-      setMostrarJustificacion(false);
-      setJustificacionActual("");
-      setPuntoSeleccionado(null);
-
+      setCargando(true);
       const token = localStorage.getItem("token");
       const { data } = await axios.get("/puntos_ruta", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setPuntosRuta(data);
     } catch (error) {
-      console.error("Error al guardar justificación:", error);
+      console.error("Error al obtener puntos de ruta:", error);
+    } finally {
+      setCargando(false);
     }
   };
 
+  useEffect(() => {
+    refetchPuntos();
+  }, []);
+
+  // Helpers UI
   const obtenerClaseEstado = (estado) => {
-    switch (estado.toLowerCase()) {
+    switch ((estado || "").toLowerCase()) {
       case "completado":
         return "badge-success";
       case "pendiente":
@@ -98,24 +89,23 @@ const Visitas = () => {
     }
   };
 
-  const obtenerClaseProgreso = (logradas, meta) => {
-    if (logradas > meta) return "bg-green-500 text-white";
-    if (logradas < meta) return "bg-red-500 text-white";
-    return "bg-yellow-500 text-black";
-  };
-
+  // Filtro
   const filtrarDatos = () => {
     return puntosRuta.filter((p) => {
       const meta = p.metas_fichas ?? 0;
       const logradas = p.fichas_logradas ?? 0;
-      const fecha = new Date(p.fecha_visita);
+      const fechaRaw = p.fecha_visita || p.fecha || p.start;
+      const fecha = fechaRaw ? new Date(fechaRaw) : null;
 
       return (
         (!filtroTipo || p.tipo === filtroTipo) &&
-        (!filtroFechaInicio || fecha >= new Date(filtroFechaInicio)) &&
-        (!filtroFechaFin || fecha <= new Date(filtroFechaFin)) &&
+        (!filtroFechaInicio ||
+          (fecha && fecha >= new Date(filtroFechaInicio))) &&
+        (!filtroFechaFin || (fecha && fecha <= new Date(filtroFechaFin))) &&
         (!filtroNombre ||
-          p.nombre?.toLowerCase().includes(filtroNombre.toLowerCase())) &&
+          (p.nombre || "")
+            .toLowerCase()
+            .includes(filtroNombre.toLowerCase())) &&
         (!filtroMotivo ||
           (filtroMotivo === "Sin motivo" && !p.motivo_visita) ||
           p.motivo_visita === filtroMotivo) &&
@@ -124,7 +114,7 @@ const Visitas = () => {
           (filtroProgreso === "<" && logradas < meta) ||
           (filtroProgreso === "=" && logradas === meta)) &&
         (!filtroEstado || p.estado === filtroEstado) &&
-        (!filtroUsuario || p.user_id === parseInt(filtroUsuario)) &&
+        (!filtroUsuario || String(p.user_id) === String(filtroUsuario)) &&
         (!filtroEquipo || p.equipo === filtroEquipo)
       );
     });
@@ -137,9 +127,86 @@ const Visitas = () => {
     paginaActual * filasPorPagina
   );
 
+  const generarDocxParaFila = async (punto) => {
+    try {
+      const usuarioActual = JSON.parse(localStorage.getItem("usuario")) || {};
+      const responsable =
+        usuarioActual?.nombre ||
+        usuarioActual?.username ||
+        "__________________";
+      const cliente = punto?.nombre || "__________________";
+      const motivo = punto?.motivo_visita || "__________________";
+      const direccion = punto?.direccion || "__________________";
+
+      const fechaTexto = new Date().toLocaleDateString("es-PE", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: [
+              new Paragraph({
+                text: "ACTA DE VISITA",
+                heading: "Heading1",
+                alignment: AlignmentType.CENTER,
+              }),
+              new Paragraph({ text: " " }),
+              new Paragraph({ text: `Fecha: ${fechaTexto}` }),
+              new Paragraph({ text: `Cliente/Institución: ${cliente}` }),
+              new Paragraph({ text: `Motivo: ${motivo}` }),
+              new Paragraph({
+                text: `Dirección: ${direccion}`,
+                spacing: { after: 200 },
+              }),
+              new Paragraph({
+                text: "La presente acta certifica que la visita se realizó conforme al plan establecido.",
+                spacing: { after: 400 },
+              }),
+              new Paragraph({ text: " " }),
+              new Paragraph({
+                text: "Firma del responsable:",
+                spacing: { before: 200 },
+              }),
+              new Paragraph({
+                text: "_______________________________",
+                alignment: AlignmentType.CENTER,
+              }),
+              new Paragraph({
+                text: responsable,
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
+          },
+        ],
+      });
+
+      const blob = await Packer.toBlob(doc);
+
+      const fechaISO = new Date().toISOString().slice(0, 10);
+      const seguro = (s) =>
+        (s || "")
+          .toString()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^\w\-]+/g, "_");
+      const filename = `Acta_Visita_${seguro(cliente)}_${fechaISO}.docx`;
+
+      // Descarga local inmediata (no hay POST, no hay almacenamiento en servidor)
+      saveAs(blob, filename);
+    } catch (e) {
+      console.error("No se pudo generar el documento:", e);
+      alert("No se pudo generar el documento para esta visita.");
+    }
+  };
+
   return (
     <Layout titulo="Visitas">
       <h1 className="text-2xl font-bold mb-4">Visitas</h1>
+
       {/* Filtros */}
       <div className="grid md:grid-cols-3 gap-3 mb-4 text-sm items-end">
         <select
@@ -169,7 +236,6 @@ const Visitas = () => {
           onChange={(e) => setFiltroMotivo(e.target.value)}
         >
           <option value="">-- Selecciona un motivo --</option>
-
           <option value="Presentación portafolio">
             Presentación portafolio
           </option>
@@ -179,6 +245,7 @@ const Visitas = () => {
           <option value="Reunión alineamiento">Reunión alineamiento</option>
           <option value="Inicio del programa">Inicio del programa</option>
           <option value="Cierre del programa">Cierre del programa</option>
+          <option value="Sin motivo">Sin motivo</option>
         </select>
 
         {usuario.role?.toLowerCase() === "admin" && (
@@ -192,11 +259,13 @@ const Visitas = () => {
               }}
             >
               <option value="">Todos los equipos</option>
-              {[...new Set(usuarios.map((u) => u.equipo))].map((equipo) => (
-                <option key={equipo} value={equipo}>
-                  {equipo}
-                </option>
-              ))}
+              {[...new Set(usuarios.map((u) => u.equipo))]
+                .filter(Boolean)
+                .map((equipo) => (
+                  <option key={equipo} value={equipo}>
+                    {equipo}
+                  </option>
+                ))}
             </select>
 
             <select
@@ -210,7 +279,7 @@ const Visitas = () => {
                 .filter((u) => !filtroEquipo || u.equipo === filtroEquipo)
                 .map((u) => (
                   <option key={u.id} value={u.id}>
-                    {u.nombre}
+                    {u.nombre ?? u.username}
                   </option>
                 ))}
             </select>
@@ -228,7 +297,7 @@ const Visitas = () => {
               .filter((u) => u.equipo === usuario.equipo)
               .map((u) => (
                 <option key={u.id} value={u.id}>
-                  {u.nombre}
+                  {u.nombre ?? u.username}
                 </option>
               ))}
           </select>
@@ -281,20 +350,17 @@ const Visitas = () => {
                   <th>Nombre</th>
                   <th>Motivo</th>
                   <th>Estado</th>
+                  {/* Nueva columna Acciones */}
+                  <th>Acciones</th>
                 </tr>
               </thead>
 
               <tbody>
                 {datosPaginados.map((punto) => {
-                  const meta = punto.metas_fichas ?? 0;
-                  const logradas = punto.fichas_logradas ?? 0;
-                  const fichaClass = obtenerClaseProgreso(logradas, meta);
-
                   return (
                     <tr key={punto.id} className="hover:bg-gray-50">
-                      <td>{punto.tipo}</td>
-                      <td>{punto.nombre}</td>
-
+                      <td>{punto.tipo || "-"}</td>
+                      <td>{punto.nombre || "-"}</td>
                       <td
                         className={
                           punto.motivo_visita ? "" : "italic text-gray-500"
@@ -308,14 +374,82 @@ const Visitas = () => {
                             punto.estado
                           )} capitalize`}
                         >
-                          {punto.estado}
+                          {punto.estado || "-"}
                         </span>
                       </td>
-                      {/* <td>
-                        <span className={`badge ${fichaClass}`}>
-                          {`${logradas} / ${meta}`}
-                        </span>
-                      </td> */}
+
+                      {/* Acciones: según exista o no documento */}
+                      <td className="whitespace-nowrap flex gap-2">
+                        {punto.documento_url ? (
+                          <a
+                            className="btn btn-xs btn-success"
+                            href={buildFileUrl(punto.documento_url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={`Ver ${punto.documento_nombre || "Word"}`}
+                          >
+                            👁️ Visualizar Word
+                          </a>
+                        ) : (
+                          <>
+                            <button
+                              className="btn btn-xs btn-primary"
+                              onClick={() => generarDocxParaFila(punto)}
+                              title="Generar Word para firmar"
+                            >
+                              📄 Generar Word
+                            </button>
+
+                            <label
+                              className="btn btn-xs btn-outline cursor-pointer"
+                              title="Subir Word firmado"
+                            >
+                              ⬆️ Subir Word
+                              <input
+                                type="file"
+                                accept=".docx"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+
+                                  const formData = new FormData();
+                                  formData.append("archivo", file);
+                                  formData.append("punto_id", punto.id);
+
+                                  try {
+                                    await axios.post(
+                                      "/documentos/subir",
+                                      formData,
+                                      {
+                                        headers: {
+                                          "Content-Type": "multipart/form-data",
+                                        },
+                                      }
+                                    );
+
+                                    // Refrescar para que aparezca "Visualizar Word"
+                                    await refetchPuntos();
+                                    alert("Archivo subido correctamente.");
+                                  } catch (error) {
+                                    console.error(
+                                      "Error al subir Word:",
+                                      error
+                                    );
+                                    const msg =
+                                      error?.response?.status === 409
+                                        ? "Este punto ya tiene un documento y no se puede reemplazar."
+                                        : "No se pudo subir el archivo.";
+                                    alert(msg);
+                                  } finally {
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                            </label>
+                          </>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -345,37 +479,6 @@ const Visitas = () => {
             </button>
           </div>
         </>
-      )}
-      {mostrarJustificacion && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4 text-center">
-              Justificación del punto
-            </h2>
-
-            <textarea
-              className="w-full h-32 border rounded px-3 py-2 mb-4"
-              value={justificacionActual}
-              onChange={(e) => setJustificacionActual(e.target.value)}
-              placeholder="Escribe aquí la justificación..."
-            />
-
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setMostrarJustificacion(false)}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={guardarJustificacion}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Guardar
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </Layout>
   );

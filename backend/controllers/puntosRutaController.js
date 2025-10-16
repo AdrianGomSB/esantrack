@@ -11,7 +11,6 @@ const crearPunto = async (req, res) => {
     tipo = "",
     nombre = "",
     direccion = null,
-    justificacion = null,
     fecha,
     hora_inicio,
     hora_fin,
@@ -23,18 +22,12 @@ const crearPunto = async (req, res) => {
   const id_user = req.user.userId;
 
   try {
-    // ✅ Corregir la fecha aquí
     let fechaFinal = fecha;
-
     if (fecha) {
-      // Si viene solo YYYY-MM-DD, agregamos hora media para evitar desfases
       if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
         fechaFinal = `${fecha}T12:00:00`;
       }
-
       const fechaObj = new Date(fechaFinal);
-
-      // ⚡ Obtener fecha local correcta
       const year = fechaObj.getFullYear();
       const month = String(fechaObj.getMonth() + 1).padStart(2, "0");
       const day = String(fechaObj.getDate()).padStart(2, "0");
@@ -43,8 +36,8 @@ const crearPunto = async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO puntos_ruta 
-        (ruta_id, latitud, longitud, orden, estado, tipo, nombre, direccion, justificacion, fecha, hora_inicio, hora_fin, user_id, metas_fichas, motivo_visita, fichas_logradas)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+        (ruta_id, latitud, longitud, orden, estado, tipo, nombre, direccion, fecha, hora_inicio, hora_fin, user_id, metas_fichas, motivo_visita, fichas_logradas)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING *`,
       [
         ruta_id,
@@ -55,8 +48,7 @@ const crearPunto = async (req, res) => {
         tipo,
         nombre,
         direccion,
-        justificacion,
-        fechaFinal, // ✅ usamos la fecha corregida
+        fechaFinal,
         hora_inicio,
         hora_fin,
         id_user,
@@ -82,7 +74,9 @@ const crearPunto = async (req, res) => {
   }
 };
 
-// Obtener todos los puntos de una ruta
+/**
+ * Obtener todos los puntos de una ruta del usuario autenticado
+ */
 const getPuntosPorRuta = async (req, res) => {
   const { ruta_id } = req.params;
   const id_user = req.user.userId;
@@ -101,7 +95,9 @@ const getPuntosPorRuta = async (req, res) => {
   }
 };
 
-// Obtener punto de ruta por ID
+/**
+ * Obtener un punto de ruta por ID
+ */
 const getPuntoPorId = async (req, res) => {
   const { id } = req.params;
   try {
@@ -118,14 +114,15 @@ const getPuntoPorId = async (req, res) => {
   }
 };
 
-// Eliminar un punto
+/**
+ * Eliminar un punto de ruta
+ */
 const eliminarPunto = async (req, res) => {
   const { id } = req.params;
   try {
-    const punto = await pool.query(
-      `SELECT ruta_id FROM puntos_ruta WHERE id = $1`,
-      [id]
-    );
+    const punto = await pool.query(`SELECT * FROM puntos_ruta WHERE id = $1`, [
+      id,
+    ]);
 
     if (punto.rowCount === 0)
       return res.status(404).json({ error: "Punto no encontrado" });
@@ -151,6 +148,9 @@ const eliminarPunto = async (req, res) => {
   }
 };
 
+/**
+ * Eliminar todos los puntos de una ruta
+ */
 const eliminarPuntosPorRuta = async (req, res) => {
   const { ruta_id } = req.params;
   try {
@@ -163,6 +163,9 @@ const eliminarPuntosPorRuta = async (req, res) => {
   }
 };
 
+/**
+ * Recalcular estado de ruta según estados de sus puntos
+ */
 const actualizarEstadoRuta = async (ruta_id) => {
   try {
     const result = await pool.query(
@@ -192,9 +195,14 @@ const actualizarEstadoRuta = async (ruta_id) => {
   }
 };
 
+/**
+ * Editar punto de ruta
+ * - Valida que si se marca 'completado' se envíen 'fichas_logradas'
+ * - Bloquea edición de campos de documento (documento_*) por aquí
+ */
 const editarPunto = async (req, res) => {
   const { id } = req.params;
-  const campos = req.body;
+  let campos = { ...req.body };
 
   try {
     const punto = await pool.query(`SELECT * FROM puntos_ruta WHERE id = $1`, [
@@ -214,6 +222,25 @@ const editarPunto = async (req, res) => {
       return res.status(400).json({
         error: "Debe registrar las fichas logradas al completar el punto.",
       });
+    }
+
+    const camposNoEditables = new Set([
+      "documento_url",
+      "documento_nombre",
+      "documento_mime",
+      "documento_tamano",
+      "documento_subido_en",
+    ]);
+    Object.keys(campos).forEach((k) => {
+      if (camposNoEditables.has(k)) {
+        delete campos[k];
+      }
+    });
+
+    if (Object.keys(campos).length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Sin cambios válidos para aplicar" });
     }
 
     const keys = Object.keys(campos);
@@ -245,6 +272,12 @@ const editarPunto = async (req, res) => {
   }
 };
 
+/**
+ * Obtener todos los puntos según rol
+ * - admin: todos
+ * - supervisor: del equipo
+ * - usuario: los suyos
+ */
 const getTodosLosPuntos = async (req, res) => {
   const { userId, role, equipo } = req.user;
 
@@ -289,6 +322,9 @@ const getTodosLosPuntos = async (req, res) => {
   }
 };
 
+/**
+ * Obtener puntos completados (según rol)
+ */
 const getPuntosCompletados = async (req, res) => {
   const { userId, role, equipo } = req.user;
 
