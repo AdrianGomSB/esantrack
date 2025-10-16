@@ -40,14 +40,15 @@ const getRutas = async (req, res) => {
     for (let ruta of rutas) {
       const puntosRes = await pool.query(
         `SELECT pr.id, pr.latitud, pr.longitud, pr.estado, pr.orden, 
-                pr.direccion, pr.justificacion, pr.tipo, pr.nombre,
-                pr.user_id, u.equipo
-         FROM puntos_ruta pr
-         LEFT JOIN users u ON pr.user_id = u.id
-         WHERE pr.ruta_id = $1 
-         ORDER BY pr.orden ASC`,
+          pr.direccion, pr.tipo, pr.nombre,
+          pr.user_id, u.equipo
+          FROM puntos_ruta pr
+          LEFT JOIN users u ON pr.user_id = u.id
+          WHERE pr.ruta_id = $1 
+          ORDER BY pr.orden ASC`,
         [ruta.id]
       );
+
       ruta.puntos = puntosRes.rows;
     }
 

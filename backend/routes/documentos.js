@@ -2,8 +2,8 @@
 const express = require("express");
 const router = express.Router();
 const { subirDocumento } = require("../controllers/documentosController");
-const { requireAuth } = require("../middlewares/authMiddleware");
+const { verifyToken } = require("../middlewares/authMiddleware");
 
-router.post("/subir", requireAuth, ...subirDocumento);
+router.post("/subir", verifyToken, ...subirDocumento);
 
 module.exports = router;
