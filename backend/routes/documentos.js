@@ -1,13 +1,9 @@
+// routes/documentos.js
 const express = require("express");
 const router = express.Router();
 const { subirDocumento } = require("../controllers/documentosController");
-// const { requireAuth } = require("../middlewares/auth"); // si aplica
+const { requireAuth } = require("../middlewares/auth"); // <- usa tu middleware real
 
-router.post("/subir", /* requireAuth, */ ...subirDocumento);
+router.post("/subir", requireAuth, ...subirDocumento);
+
 module.exports = router;
-
-const path = require("path");
-const documentosRoutes = require("./routes/documentos");
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use("/documentos", documentosRoutes);
