@@ -2,18 +2,15 @@ import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import axios from "../utils/axiosConfig";
 
-// Generación de Word en el navegador (sin backend)
 import { Document, Packer, Paragraph, AlignmentType } from "docx";
 import { saveAs } from "file-saver";
 
-// 👉 Base de API del backend (ej. https://esantrack-ylz6.onrender.com/api)
-//    La usamos para construir URLs absolutas a /uploads
 const API_BASE = import.meta.env.VITE_BACKEND_URL || "";
 const UPLOADS_BASE = API_BASE.replace(/\/api\/?$/, "");
 const buildFileUrl = (url) => {
   if (!url) return "#";
-  if (/^https?:\/\//i.test(url)) return url; // ya es absoluta
-  return `${UPLOADS_BASE}${url}`; // prefija /uploads con la URL del backend
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${UPLOADS_BASE}${url}`;
 };
 
 const Visitas = () => {
@@ -203,6 +200,19 @@ const Visitas = () => {
     }
   };
 
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [mensajeAdvertencia, setMensajeAdvertencia] = useState("");
+  const [puntoSeleccionado, setPuntoSeleccionado] = useState(null);
+
+  const abrirModal = (punto) => {
+    setPuntoSeleccionado(punto);
+    setMostrarModal(true);
+  };
+
+  const cerrarModal = () => {
+    setMostrarModal(false);
+  };
+
   return (
     <Layout titulo="Visitas">
       <h1 className="text-2xl font-bold mb-4">Visitas</h1>
@@ -380,7 +390,67 @@ const Visitas = () => {
 
                       {/* Acciones: según exista o no documento */}
                       <td className="whitespace-nowrap flex gap-2">
-                        {punto.documento_url ? (
+                        {/* Verificamos si el documento está subido y si el usuario es admin o supervisor */}
+                        {punto.documento_url &&
+                          (usuario.role === "admin" ||
+                            usuario.role === "supervisor") && (
+                            <>
+                              <button
+                                className="btn btn-xs btn-danger"
+                                onClick={() => deleteDocument(punto)} // Aquí llamas a la función de eliminar el documento
+                                title="Eliminar documento"
+                              >
+                                🗑️ Eliminar
+                              </button>
+                            </>
+                          )}
+
+                        {/* Si el documento no está subido, mostramos el botón para subir el archivo */}
+                        {!punto.documento_url && (
+                          <label
+                            className="btn btn-xs btn-outline cursor-pointer"
+                            title="Subir Word firmado"
+                          >
+                            ⬆️ Subir Word
+                            <input
+                              type="file"
+                              accept=".docx"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+
+                                const formData = new FormData();
+                                formData.append("archivo", file);
+                                formData.append("punto_id", punto.id);
+
+                                try {
+                                  await axios.post(
+                                    "/documentos/subir",
+                                    formData,
+                                    {
+                                      headers: {
+                                        "Content-Type": "multipart/form-data",
+                                      },
+                                    }
+                                  );
+
+                                  // Refrescar la lista de puntos para que se vea la opción de visualizar el documento
+                                  await refetchPuntos();
+                                  alert("Archivo subido correctamente.");
+                                } catch (error) {
+                                  console.error("Error al subir Word:", error);
+                                  alert("No se pudo subir el archivo.");
+                                } finally {
+                                  e.target.value = ""; // Limpiar el input de archivo
+                                }
+                              }}
+                            />
+                          </label>
+                        )}
+
+                        {/* Mostrar el botón de visualizar solo si el documento está subido */}
+                        {punto.documento_url && (
                           <a
                             className="btn btn-xs btn-success"
                             href={buildFileUrl(punto.documento_url)}
@@ -390,64 +460,6 @@ const Visitas = () => {
                           >
                             👁️ Visualizar Word
                           </a>
-                        ) : (
-                          <>
-                            <button
-                              className="btn btn-xs btn-primary"
-                              onClick={() => generarDocxParaFila(punto)}
-                              title="Generar Word para firmar"
-                            >
-                              📄 Generar Word
-                            </button>
-
-                            <label
-                              className="btn btn-xs btn-outline cursor-pointer"
-                              title="Subir Word firmado"
-                            >
-                              ⬆️ Subir Word
-                              <input
-                                type="file"
-                                accept=".docx"
-                                className="hidden"
-                                onChange={async (e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-
-                                  const formData = new FormData();
-                                  formData.append("archivo", file);
-                                  formData.append("punto_id", punto.id);
-
-                                  try {
-                                    await axios.post(
-                                      "/documentos/subir",
-                                      formData,
-                                      {
-                                        headers: {
-                                          "Content-Type": "multipart/form-data",
-                                        },
-                                      }
-                                    );
-
-                                    // Refrescar para que aparezca "Visualizar Word"
-                                    await refetchPuntos();
-                                    alert("Archivo subido correctamente.");
-                                  } catch (error) {
-                                    console.error(
-                                      "Error al subir Word:",
-                                      error
-                                    );
-                                    const msg =
-                                      error?.response?.status === 409
-                                        ? "Este punto ya tiene un documento y no se puede reemplazar."
-                                        : "No se pudo subir el archivo.";
-                                    alert(msg);
-                                  } finally {
-                                    e.target.value = "";
-                                  }
-                                }}
-                              />
-                            </label>
-                          </>
                         )}
                       </td>
                     </tr>
@@ -456,6 +468,37 @@ const Visitas = () => {
               </tbody>
             </table>
           </div>
+          {mostrarModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded shadow-lg w-96">
+                <h2 className="text-xl font-semibold mb-4">Advertencia</h2>
+                <p>
+                  Una vez subido el documento, no se podrá actualizar ni editar
+                  el envío. En caso de un error, contacte con su supervisor para
+                  gestionar el cambio.
+                </p>
+                <div className="flex justify-end gap-4 mt-4">
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={cerrarModal}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="btn btn-sm btn-success"
+                    onClick={() => setMostrarModal(false)}
+                  >
+                    Aceptar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {mensajeAdvertencia && (
+            <div className="alert alert-warning mt-4">
+              <strong>Advertencia:</strong> {mensajeAdvertencia}
+            </div>
+          )}
 
           <div className="flex justify-center mt-4 gap-2">
             <button

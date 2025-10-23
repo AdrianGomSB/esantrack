@@ -18,6 +18,10 @@ import * as Tooltip from "@radix-ui/react-tooltip";
 import { motion } from "framer-motion";
 import clsx from "clsx";
 
+// 🔽 NUEVO: librerías para Excel
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
 const COLORS = ["#10b981", "#f59e0b", "#3b82f6", "#ef4444"];
 const motivosFijos = [
   "Visita de cartera",
@@ -74,6 +78,10 @@ const Kpi = () => {
   const [puntos, setPuntos] = useState([]);
   const [empresaSeleccionada, setEmpresaSeleccionada] = useState("");
 
+  // 🔽 NUEVO: selector de asesoras con búsqueda y checkboxes
+  const [asesorasSeleccionadas, setAsesorasSeleccionadas] = useState([]);
+  const [busquedaAsesora, setBusquedaAsesora] = useState(""); // texto para filtrar por nombre/username
+
   const usuariosFiltrados = filtroEquipo
     ? usuarios.filter((u) => u.equipo === filtroEquipo)
     : usuarios;
@@ -106,6 +114,18 @@ const Kpi = () => {
     obtenerUsuarios();
     obtenerPuntos();
   }, []);
+
+  // Lista de asesoras filtradas por equipo + texto
+  const asesorasDeEquipo = usuarios.filter((u) => u.equipo === filtroEquipo);
+  const asesorasFiltradas = asesorasDeEquipo.filter((u) => {
+    if (!busquedaAsesora.trim()) return true;
+    const q = busquedaAsesora.toLowerCase();
+    const nombre = (u.nombre ?? "").toLowerCase();
+    const username = (u.username ?? "").toLowerCase();
+    return (
+      nombre.includes(q) || username.includes(q) || String(u.id).includes(q)
+    );
+  });
 
   useEffect(() => {
     if (!puntos || puntos.length === 0) return;
@@ -193,6 +213,68 @@ const Kpi = () => {
     usuarios,
   ]);
 
+  // 🔽 NUEVO: Export tipo SQL "SELECT * FROM puntos_ruta WHERE user_id IN (...)"
+  const exportarExcelPorAsesoras = () => {
+    if (!puntos || puntos.length === 0) return;
+
+    if (!asesorasSeleccionadas || asesorasSeleccionadas.length === 0) {
+      alert("Selecciona al menos una asesora.");
+      return;
+    }
+
+    const sel = new Set(asesorasSeleccionadas.map(String));
+    const rows = puntos.filter((p) => sel.has(String(p.user_id)));
+
+    if (rows.length === 0) {
+      alert("No hay registros para las asesoras seleccionadas.");
+      return;
+    }
+
+    // Solo columnas: Asesora (nombre o user_id), user_id, estado, motivo_visita, nombre, fecha
+    const data = rows.map((p) => {
+      const u = usuarios.find((x) => String(x.id) === String(p.user_id));
+      const asesora = u?.nombre ?? u?.username ?? p.user_id;
+      let fecha = "";
+      if (p.fecha) {
+        try {
+          const d = new Date(p.fecha);
+          if (!isNaN(d)) fecha = d.toISOString().slice(0, 10);
+        } catch {}
+      }
+      return {
+        Asesora: asesora, // nombre si existe, si no, el user_id
+        user_id: p.user_id ?? "", // lo dejamos también explícito por si lo necesitas
+        estado: p.estado ?? "",
+        motivo_visita: p.motivo_visita ?? "",
+        nombre: (p.nombre || "").trim(), // empresa/institución
+        fecha: fecha,
+      };
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data, {
+      header: [
+        "Asesora",
+        "user_id",
+        "estado",
+        "motivo_visita",
+        "nombre",
+        "fecha",
+      ],
+    });
+    XLSX.utils.book_append_sheet(wb, ws, "puntos_ruta_filtrado");
+
+    const hoy = new Date().toISOString().slice(0, 10);
+    const nombreArchivo = `puntos_ruta_asesoras_${asesorasSeleccionadas.join(
+      "-"
+    )}_${hoy}.xlsx`;
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    saveAs(
+      new Blob([wbout], { type: "application/octet-stream" }),
+      nombreArchivo
+    );
+  };
+
   return (
     <Layout titulo="Kpi">
       <h1 className="text-2xl font-bold mb-4">Resumen de Actividad</h1>
@@ -232,6 +314,7 @@ const Kpi = () => {
             setFiltroEquipo(e.target.value);
             setFiltroUsuario("");
             setEmpresaSeleccionada("");
+            setAsesorasSeleccionadas([]); // limpiar multi-select al cambiar equipo
           }}
         >
           <option value="">Todos los equipos</option>
@@ -274,7 +357,7 @@ const Kpi = () => {
             ...new Set(
               puntos
                 .filter((p) => String(p.user_id) === filtroUsuario)
-                .map((p) => (p.nombre || "").trim()) // normalizado en opciones
+                .map((p) => (p.nombre || "").trim())
                 .filter(Boolean)
             ),
           ].map((nombre, i) => (
@@ -285,8 +368,100 @@ const Kpi = () => {
         </select>
       </div>
 
+      {/* 🔽 NUEVO: Multi-select y botón de exportación tipo SQL */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-start">
+        <div className="md:col-span-2">
+          <label className="block text-sm text-gray-600 mb-1">
+            Buscar asesora por nombre, usuario o ID
+          </label>
+          <input
+            type="text"
+            className="input input-bordered w-full"
+            placeholder="Ej: Ana / agomez / 12"
+            value={busquedaAsesora}
+            onChange={(e) => setBusquedaAsesora(e.target.value)}
+            disabled={!filtroEquipo}
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() =>
+              setAsesorasSeleccionadas(
+                asesorasDeEquipo.map((u) => String(u.id))
+              )
+            }
+            disabled={!filtroEquipo || asesorasDeEquipo.length === 0}
+            title="Seleccionar todo el equipo"
+          >
+            Seleccionar todo
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() => setAsesorasSeleccionadas([])}
+            disabled={!filtroEquipo}
+          >
+            Quitar todo
+          </button>
+        </div>
+
+        <div>
+          <button
+            className="btn btn-primary text-white"
+            onClick={exportarExcelPorAsesoras}
+            disabled={!filtroEquipo || asesorasSeleccionadas.length === 0}
+            title='Exportar "SELECT * FROM puntos_ruta WHERE user_id IN (...)" con columnas específicas'
+          >
+            ⬇️ Exportar Excel (asesoras)
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-4 max-h-64 overflow-auto pr-1">
+        {asesorasFiltradas.map((u) => {
+          const id = String(u.id);
+          const checked = asesorasSeleccionadas.includes(id);
+          return (
+            <label
+              key={id}
+              className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                className="checkbox checkbox-sm"
+                checked={checked}
+                onChange={(e) => {
+                  setAsesorasSeleccionadas((prev) =>
+                    e.target.checked
+                      ? [...prev, id]
+                      : prev.filter((x) => x !== id)
+                  );
+                }}
+              />
+              <span className="text-sm">
+                {u.nombre ?? u.username ?? `ID ${id}`}{" "}
+                <span className="text-gray-400">· ID {id}</span>
+              </span>
+            </label>
+          );
+        })}
+
+        {filtroEquipo && asesorasFiltradas.length === 0 && (
+          <div className="text-sm text-gray-500">Sin coincidencias.</div>
+        )}
+        {!filtroEquipo && (
+          <div className="text-sm text-gray-500">
+            Selecciona primero un equipo para ver asesoras.
+          </div>
+        )}
+      </div>
+
       {kpis ? (
         <>
+          <br />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             {[
               { label: "Total de Puntos", value: kpis.totalPuntos ?? 0 },
